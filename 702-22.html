@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>植物根部吸水力互動實驗室</title>
+    <style>
+        :root { --green: #27ae60; --purple: #8e44ad; --soil: #795548; }
+        body { font-family: "Microsoft JhengHei", sans-serif; background: #f0f2f5; margin: 0; padding: 20px; }
+        .lab-container { max-width: 1000px; margin: auto; background: white; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); overflow: hidden; display: flex; flex-direction: column; height: 90vh; }
+        
+        /* 頁籤導覽 */
+        .tabs { display: flex; background: #2c3e50; }
+        .tab { flex: 1; padding: 15px; color: white; text-align: center; cursor: pointer; border-bottom: 3px solid transparent; transition: 0.3s; }
+        .tab.active { background: #34495e; border-bottom: 3px solid #27ae60; }
+
+        /* 實驗區域布局 */
+        .main-area { display: flex; flex: 1; overflow: hidden; }
+        .sidebar { width: 250px; background: #ecf0f1; padding: 20px; border-right: 1px solid #ddd; }
+        .view-port { flex: 1; position: relative; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+
+        /* 器材物件樣式 */
+        .tool { background: white; padding: 10px; margin-bottom: 10px; border-radius: 8px; cursor: pointer; border: 2px solid transparent; transition: 0.2s; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .tool:hover { border-color: #27ae60; transform: scale(1.05); }
+        .dish { width: 200px; height: 40px; background: #ddd; border-radius: 50% / 20px; position: relative; border: 2px solid #bbb; }
+        .soil { width: 180px; height: 30px; background: var(--soil); border-radius: 50% / 15px; position: absolute; top: 5px; left: 10px; }
+        .probe { width: 5px; height: 60px; background: #333; position: absolute; bottom: 20px; }
+        .laser-beam { width: 100%; height: 2px; position: absolute; display: none; }
+        
+        /* 數據顯示 */
+        .monitor { background: #333; color: #0f0; padding: 15px; border-radius: 5px; font-family: monospace; width: 200px; margin-top: 20px; }
+        .description { font-size: 0.9em; color: #666; padding: 10px; background: #fffde7; border-left: 5px solid #fbc02d; margin-bottom: 20px; }
+        .diffraction-pattern { width: 300px; height: 50px; border: 1px solid #ccc; margin-top: 20px; display: none; background: black; position: relative; }
+    </style>
+</head>
+<body>
+
+<div class="lab-container">
+    <div class="tabs">
+        <div class="tab active" onclick="switchEx(1)">實驗一：電容關係式</div>
+        <div class="tab" onclick="switchEx(2)">實驗二：最佳測量法</div>
+        <div class="tab" onclick="switchEx(3)">實驗三：種植最佳化</div>
+        <div class="tab" onclick="switchEx(4)">實驗四：雷射觀測</div>
+    </div>
+
+    <div class="main-area">
+        <div class="sidebar" id="tool-box">
+            <h3>實驗器材</h3>
+            <div class="tool" onclick="addWater()">💧 滴管 (加水 10mL)</div>
+            <div class="tool" onclick="toggleProbe()">📏 電容計探針</div>
+            <div id="laser-tools" style="display:none;">
+                <div class="tool" onclick="fireLaser('green')">🔦 綠光雷射 (532nm)</div>
+                <div class="tool" onclick="fireLaser('purple')">🔦 紫光雷射 (405nm)</div>
+            </div>
+        </div>
+
+        <div class="view-port">
+            <div id="ex-info" class="description">請先進行電容校準。每次加入 10mL 水以觀察數值變化 [3]。</div>
+            
+            <!-- 實驗設置插圖區域 -->
+            <div id="setup-visual">
+                <div class="dish">
+                    <div class="soil" id="soil-visual"></div>
+                    <div id="probes-visual" style="display:none;">
+                        <div class="probe" style="left: 40px;"></div>
+                        <div class="probe" style="right: 40px;"></div>
+                    </div>
+                    <div id="root-visual" style="display:none; width: 4px; height: 80px; background: #f5deb3; position: absolute; left: 98px; top: -40px;"></div>
+                </div>
+                <div id="laser-line" class="laser-beam"></div>
+            </div>
+
+            <!-- 雷射繞射條紋插圖 -->
+            <div id="diff-box" class="diffraction-pattern"></div>
+
+            <div class="monitor">
+                <div>電容值: <span id="cap-val">4.1</span> nF</div>
+                <div>含水量: <span id="water-val">0</span> %</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentEx = 1;
+    let waterAmount = 0;
+    let hasProbe = false;
+
+    function switchEx(num) {
+        currentEx = num;
+        document.querySelectorAll('.tab').forEach((t, i) => t.className = (i+1 === num) ? 'tab active' : 'tab');
+        document.getElementById('laser-tools').style.display = (num === 4) ? 'block' : 'none';
+        document.getElementById('root-visual').style.display = (num === 4) ? 'block' : 'none';
+        
+        if(num === 1) document.getElementById('ex-info').innerText = "實驗一：測量 100g 土壤與水的電容關係 [6]。";
+        if(num === 2) document.getElementById('ex-info').innerText = "實驗二：探針法 vs 鋅銅片法。探針法可避免氧化干擾 [7]。";
+        if(num === 3) document.getElementById('ex-info').innerText = "實驗三：環境控制（20°C, 55% 濕度）。20顆種子為最佳化條件 [8, 9]。";
+        if(num === 4) document.getElementById('ex-info').innerText = "實驗四：利用雷射繞射計算根部直徑 d = λL / 2S [4]。";
+        resetLab();
+    }
+
+    function addWater() {
+        waterAmount += 10;
+        let cap = (-52.04 + 31.33 * (1 + 81 * (waterAmount/98))).toFixed(1);
+        document.getElementById('cap-val').innerText = cap > 0 ? cap : 4.1;
+        document.getElementById('water-val').innerText = (waterAmount/0.98).toFixed(1);
+        document.getElementById('soil-visual').style.background = `rgba(121, 85, 72, ${0.4 + (waterAmount/100)})`;
+    }
+
+    function toggleProbe() {
+        hasProbe = !hasProbe;
+        document.getElementById('probes-visual').style.display = hasProbe ? 'block' : 'none';
+    }
+
+    function fireLaser(color) {
+        const beam = document.getElementById('laser-line');
+        const diff = document.getElementById('diff-box');
+        beam.style.display = 'block';
+        beam.style.background = color;
+        beam.style.top = '50%';
+        diff.style.display = 'block';
+        
+        // 模擬繞射條紋插圖 [4, 5]
+        let spacing = color === 'green' ? '20px' : '12px'; // 紫光波長短，條紋較密
+        diff.style.background = `repeating-linear-gradient(90deg, black, black 5px, ${color} 6px, black 7px, black ${spacing})`;
+    }
+
+    function resetLab() {
+        waterAmount = 0;
+        document.getElementById('cap-val').innerText = "4.1";
+        document.getElementById('water-val').innerText = "0";
+        document.getElementById('laser-line').style.display = 'none';
+        document.getElementById('diff-box').style.display = 'none';
+    }
+</script>
+</body>
+</html>
