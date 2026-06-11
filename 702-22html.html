@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>在天空與數字之間 - 1A2B</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+html,body{
+    height:100%;
+    overflow:hidden;
+    font-family:
+    "Noto Sans TC",
+    "Microsoft JhengHei",
+    sans-serif;
+}
+
+/* 天空背景 */
+body{
+    background:
+    linear-gradient(
+        180deg,
+        #16335c 0%,
+        #2f5d94 25%,
+        #7b6ea8 55%,
+        #ffb26f 100%
+    );
+
+    position:relative;
+}
+
+/* 遠景光暈 */
+body::before{
+    content:"";
+    position:absolute;
+    inset:0;
+
+    background:
+    radial-gradient(
+        circle at 70% 75%,
+        rgba(255,210,150,.35),
+        transparent 40%
+    );
+
+    pointer-events:none;
+}
+
+/* 雲層 */
+.cloud{
+    position:absolute;
+    background:
+    rgba(255,255,255,.12);
+
+    border-radius:100px;
+    filter:blur(10px);
+}
+
+.cloud::before,
+.cloud::after{
+    content:"";
+    position:absolute;
+    background:inherit;
+    border-radius:50%;
+}
+
+.cloud::before{
+    width:80px;
+    height:80px;
+    left:15px;
+    top:-30px;
+}
+
+.cloud::after{
+    width:100px;
+    height:100px;
+    right:15px;
+    top:-40px;
+}
+
+.c1{
+    width:240px;
+    height:80px;
+    top:15%;
+    left:-300px;
+    animation:moveCloud 80s linear infinite;
+}
+
+.c2{
+    width:350px;
+    height:110px;
+    top:30%;
+    left:-400px;
+    animation:moveCloud 110s linear infinite;
+}
+
+.c3{
+    width:280px;
+    height:90px;
+    top:55%;
+    left:-300px;
+    animation:moveCloud 95s linear infinite;
+}
+
+@keyframes moveCloud{
+    from{
+        transform:translateX(0);
+    }
+    to{
+        transform:translateX(calc(100vw + 700px));
+    }
+}
+
+/* 主畫面 */
+.wrapper{
+    height:100%;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    padding:20px;
+}
+
+.panel{
+
+    width:100%;
+    max-width:700px;
+
+    background:
+    rgba(255,255,255,.08);
+
+    backdrop-filter:blur(18px);
+
+    border:1px solid rgba(255,255,255,.2);
+
+    border-radius:28px;
+
+    padding:40px;
+
+    box-shadow:
+    0 15px 60px rgba(0,0,0,.18);
+}
+
+/* 標題 */
+.subtitle{
+    text-align:center;
+    color:rgba(255,255,255,.75);
+
+    letter-spacing:6px;
+    font-size:12px;
+
+    margin-bottom:10px;
+}
+
+.title{
+    text-align:center;
+    color:white;
+
+    font-size:42px;
+    font-weight:300;
+
+    letter-spacing:4px;
+
+    margin-bottom:10px;
+
+    text-shadow:
+    0 0 25px rgba(255,255,255,.3);
+}
+
+.description{
+    text-align:center;
+    color:rgba(255,255,255,.85);
+    margin-bottom:35px;
+}
+
+/* 輸入區 */
+.input-row{
+    display:flex;
+    gap:12px;
+    margin-bottom:20px;
+}
+
+input{
+
+    flex:1;
+
+    padding:18px;
+
+    border:none;
+
+    border-radius:18px;
+
+    background:
+    rgba(255,255,255,.12);
+
+    color:white;
+
+    font-size:24px;
+    text-align:center;
+
+    outline:none;
+}
+
+input::placeholder{
+    color:rgba(255,255,255,.6);
+}
+
+input:focus{
+    box-shadow:
+    0 0 20px rgba(255,255,255,.25);
+}
+
+button{
+    border:none;
+    cursor:pointer;
+
+    border-radius:18px;
+
+    padding:0 28px;
+
+    font-size:16px;
+
+    color:white;
+
+    transition:.25s;
+}
+
+button:hover{
+    transform:translateY(-2px);
+}
+
+#guessBtn{
+    background:
+    linear-gradient(
+        135deg,
+        #4fc3f7,
+        #5c6bc0
+    );
+}
+
+#restartBtn{
+    width:100%;
+    padding:15px;
+    margin-top:15px;
+
+    background:
+    linear-gradient(
+        135deg,
+        #ff9a76,
+        #ff6b81
+    );
+}
+
+/* 訊息 */
+#message{
+    text-align:center;
+    color:white;
+    min-height:28px;
+    margin-bottom:20px;
+}
+
+/* 紀錄 */
+.history{
+
+    background:
+    rgba(255,255,255,.06);
+
+    border-radius:18px;
+
+    overflow:hidden;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+th{
+    padding:15px;
+    color:#fff;
+    font-weight:500;
+}
+
+td{
+    padding:12px;
+    text-align:center;
+    color:rgba(255,255,255,.9);
+}
+
+tr:not(:last-child){
+    border-bottom:
+    1px solid rgba(255,255,255,.08);
+}
+
+.win{
+    color:#ffe08a;
+    font-size:24px;
+}
+
+/* 流星 */
+.star{
+    position:fixed;
+
+    width:2px;
+    height:2px;
+
+    background:white;
+
+    box-shadow:
+    0 0 15px white;
+
+    pointer-events:none;
+}
+
+.star::after{
+    content:"";
+    position:absolute;
+
+    width:160px;
+    height:2px;
+
+    background:
+    linear-gradient(
+        90deg,
+        white,
+        transparent
+    );
+
+    transform:rotate(0deg);
+    transform-origin:left center;
+}
+
+.shooting{
+    animation:shoot 1.5s linear forwards;
+}
+
+@keyframes shoot{
+    from{
+        transform:
+        translate(0,0);
+        opacity:1;
+    }
+
+    to{
+        transform:
+        translate(-600px,300px);
+        opacity:0;
+    }
+}
+
+@media(max-width:700px){
+
+    .panel{
+        padding:25px;
+    }
+
+    .title{
+        font-size:32px;
+    }
+
+    .input-row{
+        flex-direction:column;
+    }
+
+    button{
+        padding:15px;
+    }
+}
+</style>
+</head>
+<body>
+
+<div class="cloud c1"></div>
+<div class="cloud c2"></div>
+<div class="cloud c3"></div>
+
+<div class="wrapper">
+
+<div class="panel">
+
+<div class="subtitle">
+YOUR NUMBER
+</div>
+
+<div class="title">
+1A2B
+</div>
+
+<div class="description">
+在天空與數字之間
+</div>
+
+<div class="input-row">
+
+<input
+id="guessInput"
+maxlength="4"
+placeholder="輸入四位不重複數字">
+
+<button id="guessBtn">
+猜測
+</button>
+
+</div>
+
+<div id="message">
+旅程開始了...
+</div>
+
+<div class="history">
+<table>
+
+<thead>
+<tr>
+<th>次數</th>
+<th>猜測</th>
+<th>結果</th>
+</tr>
+</thead>
+
+<tbody id="historyBody">
+</tbody>
+
+</table>
+</div>
+
+<button id="restartBtn">
+重新開始
+</button>
+
+</div>
+</div>
+
+<script>
+
+let answer="";
+let count=0;
+
+function generateAnswer(){
+
+    const nums=[0,1,2,3,4,5,6,7,8,9];
+
+    answer="";
+
+    for(let i=0;i<4;i++){
+
+        const index=
+        Math.floor(
+        Math.random()*nums.length
+        );
+
+        answer+=nums[index];
+
+        nums.splice(index,1);
+    }
+
+    console.log("答案:",answer);
+}
+
+function validate(input){
+
+    if(!/^\d{4}$/.test(input))
+        return false;
+
+    return new Set(input).size===4;
+}
+
+function getAB(guess){
+
+    let A=0;
+    let B=0;
+
+    for(let i=0;i<4;i++){
+
+        if(guess[i]===answer[i]){
+            A++;
+        }
+        else if(answer.includes(guess[i])){
+            B++;
+        }
+    }
+
+    return `${A}A${B}B`;
+}
+
+function addHistory(
+count,
+guess,
+result
+){
+
+const row=
+document.createElement("tr");
+
+row.innerHTML=
+`
+<td>${count}</td>
+<td>${guess}</td>
+<td>${result}</td>
+`;
+
+document
+.getElementById("historyBody")
+.prepend(row);
+}
+
+function guessNumber(){
+
+const input=
+document.getElementById("guessInput");
+
+const guess=
+input.value.trim();
+
+const message=
+document.getElementById("message");
+
+if(!validate(guess)){
+
+message.innerHTML=
+"請輸入四位不重複數字";
+
+return;
+}
+
+count++;
+
+const result=
+getAB(guess);
+
+addHistory(
+count,
+guess,
+result
+);
+
+if(result==="4A0B"){
+
+message.innerHTML=
+`<span class="win">
+抵達終點了 ✨
+</span>`;
+
+createMeteor();
+
+document
+.getElementById("guessBtn")
+.disabled=true;
+
+}else{
+
+message.innerHTML=
+`第 ${count} 次猜測 · ${result}`;
+}
+
+input.value="";
+input.focus();
+}
+
+function restartGame(){
+
+count=0;
+
+generateAnswer();
+
+document
+.getElementById("historyBody")
+.innerHTML="";
+
+document
+.getElementById("message")
+.innerHTML=
+"新的天空正在展開...";
+
+document
+.getElementById("guessBtn")
+.disabled=false;
+}
+
+function createMeteor(){
+
+for(let i=0;i<5;i++){
+
+setTimeout(()=>{
+
+const star=
+document.createElement("div");
+
+star.className=
+"star shooting";
+
+star.style.right=
+Math.random()*20+"vw";
+
+star.style.top=
+Math.random()*30+"vh";
+
+document.body.appendChild(star);
+
+setTimeout(()=>{
+star.remove();
+},1500);
+
+},i*300);
+
+}
+}
+
+document
+.getElementById("guessBtn")
+.addEventListener(
+"click",
+guessNumber
+);
+
+document
+.getElementById("guessInput")
+.addEventListener(
+"keydown",
+e=>{
+if(e.key==="Enter"){
+guessNumber();
+}
+});
+
+document
+.getElementById("restartBtn")
+.addEventListener(
+"click",
+restartGame
+);
+
+generateAnswer();
+
+</script>
+
+</body>
+</html>
